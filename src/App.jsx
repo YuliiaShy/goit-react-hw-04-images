@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import  { useState, useEffect } from 'react';
 import { animateScroll as scroll } from 'react-scroll';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -10,97 +10,73 @@ import Loader from 'components/Loader';
 import {Container} from 'App.styled';
 import api from "api/API";
 
-class App extends Component {
-  state = {
-    searchQuery: '',
-    page: 1,
-    images: [],
-    showModal: false,
-    status: 'idle',
-    total: 0,
-    largeImage: '',
-    error: null,
-  };
 
-  componentDidUpdate = (_, prevState) => {
-    const { searchQuery, page } = this.state;
+const App = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [images, setImages] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [status, setStatus] = useState('idle');
+  const [total, setTotal] = useState(null);
+  const [largeImage, setLargeImage] = useState(null);
+  const [error, setError] = useState(null);
 
-    if (prevState.searchQuery !== searchQuery) {
-      this.setState({
-        images: [],
-        status: 'pending',
-        page: 1,
-      });
-      this.getImages();
+  useEffect(() => {
+    if (!searchQuery) {
+      return;
     }
-    if (page !== prevState.page && page !== 1) {
-      this.setState({
-        status: 'pending',
-      });
-      this.getImages();
-scroll.scrollToBottom();
-    }
-  };
+setStatus('pending');
+const getImages= async (searchQuery, page) => {
+      try {
+        const { totalHits, hits } = await api.fetchImages(searchQuery, page);
 
- getImages() {
-    const { searchQuery, page } = this.state;
-
-    try {
-      const {totalHits, hits} = api.fetchImages(searchQuery, page);
-
-      if (hits.length === 0) {
-        this.setState({
-          status: 'idle',
-        });
+         if (hits.length === 0) {
+        setStatus('idle');
         toast.error(`Not found: ${searchQuery} `);
         return
       }
 
-      this.setState(prevState => ({
-        images: [...prevState.images, ...hits],
-        status: 'resolved',
-        total: totalHits,
-      }));
-    } catch (error) {
-      this.setState({
-        error,
-        status: 'rejected',
-      });
-      
+        if (page === 1 )
+        toast.success(`We found ${totalHits} images`);
+
+        setImages(images => [...images, ...hits]);
+        setTotal(totalHits);
+        setStatus('resolved');
+      } catch (error) {
+        setError(error);
+        setStatus('rejected');
+      } 
+    };
+    getImages(searchQuery, page);
+    scroll.scrollToBottom();
+  }, [searchQuery, page]);
+
+  useEffect(() => {
+    if (total === images.length) {
+      toast.warn(`You've reached the end of search results`);
     }
+  }, [total, images.length]);
+
+  const handleSubmitInput = value => {
+    setSearchQuery(value);
+    setImages([]);
+    setPage(1);
+    setError(null);
+    setTotal(null);
+  };
+
+  const handleLoadMoreButtonClick  = () => {
+    setPage(page => page + 1);
+  };
+
+  const toggleModal = () => {
+    setShowModal(!showModal);
+  };
+
+  const onClickImage = (event) => {
+    toggleModal();
+    setLargeImage(event)
   }
-
-handleSubmitInput = searchQuery => {
-    this.setState({
-      searchQuery,
-      images: [],
-      page: 1,
-    });
-  };
-
-  handleLoadMoreButtonClick = () => {
-    this.setState(({ page }) => {
-      return {
-        page: page + 1,
-      };
-    });
-  }; 
-
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({
-      showModal: !showModal,
-    }));
-  };
-
-  onClickImage = event => {
-    this.toggleModal();
-    this.setState({ largeImage: event });
-  };
-
-  render() {
-    const { images, showModal, status, total, largeImage } = this.state;
-    const { handleSubmitInput, toggleModal, handleLoadMoreButtonClick, onClickImage } = this;
-
 
     return (
       <Container> 
@@ -115,7 +91,6 @@ handleSubmitInput = searchQuery => {
         <ToastContainer autoClose={2000} />
       </Container>
     );
-  }
 }
 
 export default App;

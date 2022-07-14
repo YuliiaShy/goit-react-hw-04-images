@@ -1,30 +1,24 @@
 import PropTypes from 'prop-types';
-import { PureComponent } from 'react';
+import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ModalWindow, Overlay } from './Modal.styled';
 
 const modalRoot = document.querySelector('#modal-root');
 
-class Modal extends PureComponent {
-    componentDidMount() {
-        window.addEventListener('keydown', this.handleEsc);
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('keydown', this.handleEsc);
-    }
-
-    handleEsc = event => {
-        if (event.code === 'Escape') this.props.onClose();
+const Modal = ({ children, onClose }) => {
+    useEffect(() => {
+const handleEsc = event => {
+        if (event.code === 'Escape') onClose();
     };
-
-    handleOverlayClick = event => {
-        if (event.currentTarget === event.target) this.props.onClose();
+ window.addEventListener('keydown', handleEsc);
+return () => {
+      window.removeEventListener('keydown', handleEsc);
     };
+  }, [onClose]);  
 
-    render() {
-        const { children } = this.props;
-        const { handleOverlayClick } = this;
+    const handleOverlayClick = event => {
+        if (event.currentTarget === event.target) onClose();
+    };
 
       return createPortal(
          
@@ -36,7 +30,7 @@ class Modal extends PureComponent {
           modalRoot
        );
     }
-}
+
 
 export default Modal;
 
