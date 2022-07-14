@@ -42,11 +42,11 @@ scroll.scrollToBottom();
     }
   };
 
-  async getImages() {
+ getImages() {
     const { searchQuery, page } = this.state;
 
     try {
-      const {totalHits, hits} = await api.fetchImages(searchQuery, page);
+      const {totalHits, hits} = api.fetchImages(searchQuery, page);
 
       if (hits.length === 0) {
         this.setState({

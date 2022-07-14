@@ -7,6 +7,3 @@ export const Container = styled.div`
   padding-bottom: 24px;
 `;
 
-// export const modalImage = styled.img`
-// max-width: 800px;
-// `;
