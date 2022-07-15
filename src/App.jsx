@@ -7,6 +7,7 @@ import ImageGallery from 'components/ImageGallery';
 import Button from 'components/Button';
 import Modal from 'components/Modal';
 import Loader from 'components/Loader';
+import ErrorMessage from 'components/ErrorMessage';
 import {Container} from 'App.styled';
 import api from "api/API";
 
@@ -29,16 +30,13 @@ setStatus('pending');
 const getImages= async (searchQuery, page) => {
       try {
         const { totalHits, hits } = await api.fetchImages(searchQuery, page);
-
-         if (hits.length === 0) {
+        if (hits.length === 0) {
         setStatus('idle');
         toast.error(`Not found: ${searchQuery} `);
         return
       }
-
         if (page === 1 )
         toast.success(`We found ${totalHits} images`);
-
         setImages(images => [...images, ...hits]);
         setTotal(totalHits);
         setStatus('resolved');
@@ -48,7 +46,7 @@ const getImages= async (searchQuery, page) => {
       } 
     };
     getImages(searchQuery, page);
-    scroll.scrollToBottom();
+    
   }, [searchQuery, page]);
 
   useEffect(() => {
@@ -63,10 +61,12 @@ const getImages= async (searchQuery, page) => {
     setPage(1);
     setError(null);
     setTotal(null);
+    
   };
 
   const handleLoadMoreButtonClick  = () => {
     setPage(page => page + 1);
+    scroll.scrollToBottom();
   };
 
   const toggleModal = () => {
@@ -87,7 +87,8 @@ const getImages= async (searchQuery, page) => {
           <img src={largeImage} alt={''}/>
         </Modal>)}
         {status !== 'pending' && images.length > 0 && images.length < total && (
-          <Button onClick={handleLoadMoreButtonClick} /> )}
+          <Button onClick={handleLoadMoreButtonClick} />)}
+        {error && <ErrorMessage message={error.message} />}
         <ToastContainer autoClose={2000} />
       </Container>
     );
